@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Three Roads to Lucca</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;0,900;1,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  /* Layout concept: an archivist's dossier for one walking problem — parchment folios carry
+     the argument, two dark map-plates (opening and closing) hold the moving proof, and every
+     figure sits in the same cream mat, like prints catalogued in a survey record. */
+  :root{
+    --parchment:#ece2c9;      --parchment-deep:#ddcfa9;
+    --ink:#2a2219;             --ink-soft:#5a4f3f;
+    --plate:#0d1430;           --plate-fg:#eee7d6;   --plate-soft:#a7acc9;
+    --gold:#9c7a34;            --gold-bright:#c89a42;
+    --line: rgba(42,34,25,.16);--line-dark: rgba(238,231,214,.16);
+    --c-bi:#2ea8ff; --c-bi2:#b66cff; --c-astar:#ffb347; --c-hill:#ff7ab6;
+    --c-start:#22e06b; --c-end:#ff4040; --c-path:#ffffff;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:var(--parchment); color:var(--ink);
+    font-family:"Source Serif 4", Georgia, serif;
+    font-size:17px; line-height:1.6;
+    padding-left:max(0px, env(safe-area-inset-left,0px));
+    padding-right:max(0px, env(safe-area-inset-right,0px));
+  }
+  h1,h2,h3{ font-family:"Fraunces", Georgia, serif; text-wrap:balance; margin:0; color:var(--ink); }
+  p{ margin:0; }
+  img{ max-width:100%; display:block; }
+  a{ color:var(--gold); text-decoration-thickness:1px; }
+  .mono{ font-family:"IBM Plex Mono", ui-monospace, monospace; }
+  .wrap{
+    max-width:1100px; margin:0 auto;
+    padding-left:max(20px, env(safe-area-inset-left,0px));
+    padding-right:max(20px, env(safe-area-inset-right,0px));
+  }
+  /* ---------- masthead ---------- */
+  .mast{ border-bottom:1px solid var(--line); padding-block:14px; }
+  .mast .wrap{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .wordmark{ font-family:"Fraunces", serif; font-weight:600; font-size:17px; letter-spacing:.02em; }
+  .wordmark em{ font-style:italic; color:var(--gold); }
+  .filenum{ font-family:"IBM Plex Mono", monospace; font-size:11px; letter-spacing:.12em; color:var(--ink-soft); text-transform:uppercase; }
+  /* ---------- bands ---------- */
+  .band{ padding-block:64px; }
+  .band.plate{ background:var(--plate); color:var(--plate-fg); }
+  .band.deep{ background:var(--parchment-deep); }
+  /* ---------- hero ---------- */
+  .eyebrow{ font-family:"IBM Plex Mono", monospace; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:14px; }
+  .plate .eyebrow{ color:var(--gold-bright); }
+  h1.title{ font-size:clamp(40px,7vw,68px); font-weight:600; line-height:1.03; }
+  .lede{ font-size:19px; max-width:62ch; margin-top:18px; color:var(--ink-soft); }
+  .plate .lede{ color:var(--plate-soft); }
+  .ledger{ display:flex; flex-wrap:wrap; gap:10px 28px; margin-top:28px; font-family:"IBM Plex Mono", monospace; font-size:12.5px; letter-spacing:.02em; }
+  .ledger span b{ color:var(--ink); font-weight:600; letter-spacing:.14em; text-transform:uppercase; font-size:10.5px; display:block; color:var(--gold); margin-bottom:3px; }
+  .ledger span{ color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+  .plate .ledger span{ color:var(--plate-soft); }
+  .plate .ledger span b{ color:var(--gold-bright); }
+  /* ---------- the plate stage (video) ---------- */
+  .stage{ margin-top:44px; display:grid; grid-template-columns:380px 1fr; gap:36px; align-items:center; }
+  @media (max-width:800px){ .stage{ grid-template-columns:1fr; } }
+  .stage-frame{ border:1px solid rgba(238,231,214,.22); border-radius:2px; overflow:hidden; background:#000; max-width:380px; }
+  .stage video{ width:100%; display:block; }
+  .stage-side{ display:flex; flex-direction:column; gap:20px; }
+  .legend{ display:flex; flex-wrap:wrap; gap:14px 24px; font-family:"IBM Plex Mono", monospace; font-size:14px; letter-spacing:.03em; color:var(--plate-soft); }
+  .legend i{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px; vertical-align:-1px; }
+  .stage-cap{ font-size:18px; line-height:1.55; color:var(--plate-soft); max-width:56ch; }
+  /* ---------- section heads ---------- */
+  .kicker{ display:flex; align-items:baseline; gap:14px; margin-bottom:22px; }
+  .kicker .no{ font-family:"IBM Plex Mono", monospace; font-size:13px; color:var(--gold); letter-spacing:.08em; }
+  .plate .kicker .no{ color:var(--gold-bright); }
+  .kicker h2{ font-size:clamp(26px,4vw,34px); font-weight:600; }
+  .section > .wrap > p.intro{ max-width:66ch; font-size:17.5px; color:var(--ink-soft); margin-bottom:28px; }
+  .plate .intro{ color:var(--plate-soft); }
+  /* ---------- stat ledger strip ---------- */
+  .stats-strip{ display:flex; flex-wrap:wrap; gap:22px 36px; padding:18px 0 8px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin:22px 0 32px; }
+  .stats-strip div{ font-family:"IBM Plex Mono",monospace; }
+  .stats-strip b{ display:block; font-size:21px; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .stats-strip small{ font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); }
+  /* ---------- figure frame (consistent across the whole dossier) ---------- */
+  .frame{ background:#f6f0de; border:1px solid var(--line); padding:14px 14px 0; margin:18px 0; }
+  .frame img{ border:1px solid rgba(42,34,25,.08); }
+  .framecap{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.03em; color:var(--ink-soft); padding:10px 2px 14px; }
+  .framecap b{ color:var(--gold); text-transform:uppercase; letter-spacing:.1em; font-size:10px; margin-right:6px; }
+  /* ---------- algorithm cards ---------- */
+  .cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  @media (max-width:760px){ .cards{ grid-template-columns:1fr; } }
+  .card{ border:1px solid var(--line); background:#f6f0de; min-width:0; display:flex; flex-direction:column; }
+  .card .bar{ height:5px; }
+  .card .body{ padding:18px 18px 20px; display:flex; flex-direction:column; gap:12px; flex:1; }
+  .card h3{ font-size:20px; font-weight:600; }
+  .card .tag{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.08em; color:var(--ink-soft); text-transform:uppercase; }
+  .card p{ font-size:15px; color:var(--ink-soft); }
+  .card video{ width:100%; display:block; background:#000; border:1px solid var(--line); }
+  .code{ background:var(--plate); color:var(--plate-fg); font-family:"IBM Plex Mono",monospace; font-size:11.5px; line-height:1.6; padding:12px 14px; white-space:pre-wrap; word-break:break-word; }
+  .mini{ display:flex; gap:14px; border-top:1px solid var(--line); padding-top:12px; flex-wrap:wrap; }
+  .mini div{ font-family:"IBM Plex Mono",monospace; }
+  .mini b{ display:block; font-size:16px; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .mini small{ font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); }
+  /* ---------- definition table ---------- */
+  .deftable{ width:100%; border-collapse:collapse; font-size:14.5px; }
+  .deftable th,.deftable td{ text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .deftable th{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); font-weight:500; }
+  .deftable td:first-child,.deftable th:first-child{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em; color:var(--gold); text-transform:uppercase; white-space:nowrap; }
+  .tablewrap{ overflow-x:auto; }
+  /* ---------- scoreboard (dark) ---------- */
+  .score{ width:100%; border-collapse:collapse; font-size:14.5px; min-width:560px; }
+  .score th,.score td{ padding:13px 16px; border-bottom:1px solid var(--line-dark); font-variant-numeric:tabular-nums; }
+  .score thead th{ font-family:"Fraunces",serif; font-weight:600; font-size:16px; text-align:left; border-bottom:2px solid var(--line-dark); }
+  .score thead th.mBI{ color:var(--c-bi); } .score thead th.mAS{ color:var(--c-astar); } .score thead th.mHC{ color:var(--c-hill); }
+  .score tbody th{ text-align:left; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--plate-soft); font-weight:500; white-space:nowrap; }
+  .score td{ font-family:"IBM Plex Mono",monospace; color:var(--plate-fg); }
+  .score td.win{ color:var(--c-start); }
+  .score td.lose{ color:var(--c-end); }
+  /* ---------- path rows ---------- */
+  .pathrow{ display:flex; gap:16px; align-items:flex-start; padding:16px 0; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .pathrow:last-child{ border-bottom:none; }
+  .pill{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; padding:4px 10px; border-radius:20px; white-space:nowrap; }
+  .pill.ok{ background:rgba(34,224,107,.15); color:#1a7a44; }
+  .pill.stuck{ background:rgba(255,64,64,.14); color:#b4332f; }
+  .pathrow .name{ font-weight:600; min-width:170px; font-family:"Fraunces",serif; font-size:16px; }
+  .pathrow .trail{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); flex:1; min-width:0; overflow-x:auto; }
+  .pathrow .meta{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); white-space:nowrap; }
+  /* ---------- verdict ---------- */
+  .verdict-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  @media (max-width:760px){ .verdict-grid{ grid-template-columns:1fr; } }
+  .verdict-card{ border-top:3px solid; padding-top:18px; }
+  .verdict-card h3{ font-size:19px; color:var(--plate-fg); font-weight:600; margin-bottom:10px; }
+  .verdict-card p{ color:var(--plate-soft); font-size:15px; }
+  .verdict-card p.rec{ font-style:italic; font-family:"Fraunces",serif; font-size:17px; color:var(--plate-fg); margin-top:12px; }
+  /* ---------- footer ---------- */
+  footer{ border-top:1px solid var(--line); padding-block:30px; font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-soft); }
+  footer .wrap{ display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  footer b{ color:var(--ink); }
+  /* ---------- gallery rows ---------- */
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:700px){ .row2{ grid-template-columns:1fr; } }
+  .row3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:700px){ .row3{ grid-template-columns:1fr; } }
+  /* ---------- side-by-side text + figure ---------- */
+  .split{ display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; }
+  @media (max-width:800px){ .split{ grid-template-columns:1fr; } }
+  .split .frame{ margin:0; }
+</style>
+</head>
+<body>
+<header class="mast">
+  <div class="wrap">
+    <span class="wordmark">Three Roads <em>to Lucca</em></span>
+    <span class="filenum">Dossier No. 42 &middot; Centro Storico, Lucca</span>
+  </div>
+</header>
+
+<section class="band hero">
+  <div class="wrap">
+    <div class="eyebrow">A pathfinding project, surveyed</div>
+    <h1 class="title">Three roads<br>to Lucca.</h1>
+    <p class="lede">One walled Italian city, one walker standing at a fixed door, one gate across town to reach.
+      Three search strategies attempt the same walk: Bidirectional&nbsp;Dijkstra meets itself in the middle,
+      A* follows a compass bearing on the goal, and Hill&nbsp;Climbing refuses to ever look back &mdash; until
+      the old city's medieval tangle stops it cold.</p>
+    <div class="ledger">
+      <span><b>Place</b>Centro Storico, Lucca, Italy</span>
+      <span><b>Network</b>Walking streets, OpenStreetMap</span>
+      <span><b>Seed</b>42</span>
+      <span><b>Instance</b>559 intersections &middot; 1,380 moves</span>
+    </div>
+  </div>
+</section>
+
+<section class="band plate">
+  <div class="wrap">
+    <div class="eyebrow">The three searches, end to end</div>
+    <div class="stage">
+      <div class="stage-frame">
+        <video autoplay loop muted playsinline controls>
+          <source src="assets/combined.mp4" type="video/mp4">
+        </video>
+      </div>
+      <div class="stage-side">
+        <p class="stage-cap">One continuous reel: Bidirectional Dijkstra's two waves closing on each other,
+          then A*'s single amber beam leaning toward the goal, then Hill Climbing's pink line walking
+          itself into a dead end a few streets short of B.</p>
+        <div class="legend">
+          <span><i style="background:var(--c-bi)"></i>Forward wave</span>
+          <span><i style="background:var(--c-bi2)"></i>Backward wave</span>
+          <span><i style="background:var(--c-astar)"></i>A* frontier</span>
+          <span><i style="background:var(--c-hill)"></i>Hill Climbing</span>
+          <span><i style="background:var(--c-path)"></i>Final path</span>
+          <span><i style="background:var(--c-start)"></i>Start, A</span>
+          <span><i style="background:var(--c-end)"></i>Goal, B</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band section" id="problem">
+  <div class="wrap">
+    <div class="split">
+      <div class="frame">
+        <img src="assets/fig01_state_space.png" alt="State space of the problem: every intersection, and the first two layers around A with their step costs">
+        <div class="framecap"><b>Fig. 1</b>Every intersection (left) and the first two moves out of A, each street labelled with its true cost in metres (right).</div>
+      </div>
+      <div>
+        <div class="kicker"><span class="no">&sect;1</span><h2>The map is a graph</h2></div>
+        <p class="intro">Every intersection in Centro Storico becomes a <b>state</b>; every street segment between
+          two intersections becomes an <b>action</b>, costed at its true length in metres. A start door A and a
+          goal gate B are chosen at random &mdash; seeded, so the instance is reproducible &mdash; at least half the
+          map's diagonal apart. Finding a route is a single-agent search over that graph.</p>
+        <div class="stats-strip" style="margin-bottom:0;">
+          <div><b>559</b><small>Intersections</small></div>
+          <div><b>1,380</b><small>Directed moves</small></div>
+          <div><b>2.47</b><small>Mean branching</small></div>
+          <div><b>1,772&nbsp;m</b><small>A&ndash;B straight line</small></div>
+          <div><b>2,426.5&nbsp;m</b><small>Optimal walking route</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band deep section" id="algorithms">
+  <div class="wrap">
+    <div class="kicker"><span class="no">&sect;2</span><h2>Three ways to search</h2></div>
+    <p class="intro">Same map, same A, same B &mdash; three different ideas about where to look next.
+      Each card plays its own run of the instance above: watch the explored streets light up, then compare
+      what it cost.</p>
+    <div class="cards">
+
+      <div class="card">
+        <div class="bar" style="background:linear-gradient(90deg,var(--c-bi),var(--c-bi2))"></div>
+        <div class="body">
+          <div>
+            <div class="tag">O((V+E) log V) &middot; optimal</div>
+            <h3>Bidirectional Dijkstra</h3>
+          </div>
+          <video autoplay loop muted playsinline>
+            <source src="assets/bidirectional-dijkstra.mp4" type="video/mp4">
+          </video>
+          <p>Two ripples instead of one: a forward wave grows from A, a backward wave grows from B over
+            the reversed streets. Each only has to cover about half the distance, and stops the instant
+            the waves provably meet.</p>
+          <pre class="code">loop while both frontiers hold nodes:
+  if top(F) + top(B) &gt;= best: stop &mdash; optimal
+  advance the smaller-radius side
+  settle its node, relax its streets
+  a node seen by both waves updates best</pre>
+          <div class="mini">
+            <div><b>257</b><small>Nodes expanded</small></div>
+            <div><b>1.34&nbsp;ms</b><small>Median time</small></div>
+            <div><b>2,426.5&nbsp;m</b><small>Optimal</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="bar" style="background:var(--c-astar)"></div>
+        <div class="body">
+          <div>
+            <div class="tag">O(E log V), usually far fewer &middot; optimal</div>
+            <h3>A*</h3>
+          </div>
+          <video autoplay loop muted playsinline>
+            <source src="assets/astar.mp4" type="video/mp4">
+          </video>
+          <p>One frontier, ranked by f = g + h: real distance travelled plus the straight-line distance
+            still owed to B. Streets that lean toward the goal get explored first, so the search narrows
+            into a beam instead of spreading in every direction.</p>
+          <pre class="code">push A with f = g + h
+loop: pop the node with smallest f
+  if node = B: stop &mdash; optimal
+  else relax its streets,
+       push neighbours with f = g + h</pre>
+          <div class="mini">
+            <div><b>164</b><small>Nodes expanded</small></div>
+            <div><b>0.733&nbsp;ms</b><small>Median time</small></div>
+            <div><b>2,426.5&nbsp;m</b><small>Optimal</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="bar" style="background:var(--c-hill)"></div>
+        <div class="body">
+          <div>
+            <div class="tag">O(b&middot;d), O(1) memory &middot; not complete</div>
+            <h3>Hill Climbing</h3>
+          </div>
+          <video autoplay loop muted playsinline>
+            <source src="assets/hill-climbing.mp4" type="video/mp4">
+          </video>
+          <p>No frontier, no memory of where it has been &mdash; only the street it's standing on. It always
+            steps to whichever neighbour is closest to B in a straight line, and the moment none is closer,
+            it stops for good.</p>
+          <pre class="code">stand on current
+look at every neighbour's h(n)
+step to the one closest to B
+no neighbour closer &rarr; stop, stuck</pre>
+          <div class="mini">
+            <div><b>6</b><small>Nodes expanded</small></div>
+            <div><b>0.087&nbsp;ms</b><small>Median time</small></div>
+            <div><b>629.6&nbsp;m</b><small>1,327 m short</small></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="kicker" style="margin-top:46px;"><span class="no">&sect;2.1</span><h2 style="font-size:22px;">How each one decides</h2></div>
+    <div class="row3">
+      <div class="frame" style="margin:0;">
+        <img src="assets/fig02_flowchart_bidirectional_dijkstra.png" alt="Workflow of Bidirectional Dijkstra">
+        <div class="framecap"><b>Fig. 2</b>Two waves, one stop rule.</div>
+      </div>
+      <div class="frame" style="margin:0;">
+        <img src="assets/fig03_flowchart_astar.png" alt="Workflow of A*">
+        <div class="framecap"><b>Fig. 3</b>One frontier, ranked by f.</div>
+      </div>
+      <div class="frame" style="margin:0;">
+        <img src="assets/fig04_flowchart_hill_climbing.png" alt="Workflow of Hill Climbing">
+        <div class="framecap"><b>Fig. 4</b>Greedy, and no way back.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band section" id="frontiers">
+  <div class="wrap">
+    <div class="kicker"><span class="no">&sect;3</span><h2>Frontiers and search trees</h2></div>
+    <p class="intro">What an algorithm is "thinking about" at any instant is its <b>frontier</b>; what it has
+      already settled is its <b>explored set</b>. Bidirectional Dijkstra keeps two heaps and two explored
+      sets &mdash; one per wave. A* keeps one heap ordered by f. Hill Climbing keeps nothing but the ground
+      it's standing on.</p>
+    <div class="tablewrap">
+      <table class="deftable">
+        <tr><th>&nbsp;</th><th>Bidirectional Dijkstra</th><th>A*</th><th>Hill Climbing</th></tr>
+        <tr><td>Frontier</td><td>two min-heaps on g, one per wave</td><td>one min-heap on f = g + h</td><td>none &mdash; one current node</td></tr>
+        <tr><td>Priority</td><td>distance from its own root</td><td>g(n) + h(n)</td><td>h(n) of the neighbours</td></tr>
+        <tr><td>Explored set</td><td>one settled flag per wave</td><td>popped &amp; expanded nodes</td><td>not kept &mdash; cannot revisit</td></tr>
+        <tr><td>Stop rule</td><td>top(F) + top(B) &ge; best</td><td>goal popped from the heap</td><td>no neighbour is closer</td></tr>
+      </table>
+    </div>
+    <div class="frame" style="max-width:760px; margin-left:auto; margin-right:auto;">
+      <img src="assets/fig07_frontier_growth.png" alt="Frontier size after every expansion">
+      <div class="framecap"><b>Fig. 7</b>Frontier size after every expansion &mdash; two small heaps beat one big one.</div>
+    </div>
+  </div>
+</section>
+
+<section class="band deep section" id="heuristic">
+  <div class="wrap">
+    <div class="kicker"><span class="no">&sect;4</span><h2>A compass, not a map</h2></div>
+    <p class="intro">A* and Hill Climbing both steer by h(n): the straight-line distance from an intersection
+      to B. A street can never be shorter than the straight line between its ends, so h never overestimates
+      &mdash; which is exactly what keeps A* optimal. Bidirectional Dijkstra needs no compass at all; its
+      speed comes from searching from both ends, not from aiming.</p>
+    <div class="stats-strip">
+      <div><b>0 / 559</b><small>Admissibility violations</small></div>
+      <div><b>70.4%</b><small>Mean informedness</small></div>
+      <div><b>2 / 1,380</b><small>Edges mildly inconsistent</small></div>
+    </div>
+    <p style="max-width:66ch; color:var(--ink-soft); margin-bottom:18px;">The weakness is the same straight
+      line: it ignores walls and dead ends. In a medieval centre like Lucca that gap is exactly where
+      Hill Climbing gets fooled.</p>
+    <div class="frame">
+      <img src="assets/fig08_heuristic.png" alt="Heuristic h versus true remaining cost h star">
+      <div class="framecap"><b>Fig. 8</b>h(n) against the true remaining distance, for every node &mdash; always on or below the line.</div>
+    </div>
+  </div>
+</section>
+
+<section class="band plate" id="results">
+  <div class="wrap">
+    <div class="eyebrow">Measured on the instance above</div>
+    <div class="kicker"><span class="no">&sect;5</span><h2>The scoreboard</h2></div>
+    <p class="intro">Same walk, same machine, timed as the median of twenty clean runs. Bidirectional
+      Dijkstra and A* both land on the exact optimum; Hill Climbing is an order of magnitude cheaper
+      and does not arrive at all.</p>
+    <div class="tablewrap">
+      <table class="score">
+        <thead><tr><th>&nbsp;</th><th class="mBI">Bi&#8209;Dijkstra</th><th class="mAS">A*</th><th class="mHC">Hill Climbing</th></tr></thead>
+        <tbody>
+          <tr><th>Goal reached</th><td class="win">yes</td><td class="win">yes</td><td class="lose">no</td></tr>
+          <tr><th>Path cost</th><td>2,426.5 m</td><td>2,426.5 m</td><td>629.6 m</td></tr>
+          <tr><th>Cost vs. optimal</th><td class="win">+0.0%</td><td class="win">+0.0%</td><td class="lose">1,327 m short</td></tr>
+          <tr><th>Nodes expanded</th><td>257</td><td>164</td><td>6</td></tr>
+          <tr><th>Peak frontier</th><td>42</td><td>47</td><td>1</td></tr>
+          <tr><th>Time, median</th><td>1.34 ms</td><td>0.733 ms</td><td>0.087 ms</td></tr>
+          <tr><th>Peak memory</th><td>24.6 KiB</td><td>30.6 KiB</td><td>28.4 KiB</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="band section">
+  <div class="wrap">
+    <div class="frame">
+      <img src="assets/fig11_performance.png" alt="Performance comparison chart">
+      <div class="framecap"><b>Fig. 11</b>The scoreboard, drawn to scale.</div>
+    </div>
+  </div>
+</section>
+
+<section class="band deep section" id="paths">
+  <div class="wrap">
+    <div class="kicker"><span class="no">&sect;6</span><h2>Where each one actually walked</h2></div>
+    <p class="intro">Two identical routes and one abandoned one, on the same streets.</p>
+    <div class="pathrow">
+      <span class="name" style="color:var(--c-bi)">Bidirectional Dijkstra</span>
+      <span class="pill ok">reached B</span>
+      <span class="trail">620893001 &rarr; 849906847 &rarr; 2574785532 &rarr; &hellip; &rarr; 402980028 &rarr; 402980103</span>
+      <span class="meta">31 nodes &middot; 2,426.5 m</span>
+    </div>
+    <div class="pathrow">
+      <span class="name" style="color:#c8870f">A*</span>
+      <span class="pill ok">reached B</span>
+      <span class="trail">620893001 &rarr; 849906847 &rarr; 2574785532 &rarr; &hellip; &rarr; 402980028 &rarr; 402980103</span>
+      <span class="meta">31 nodes &middot; 2,426.5 m</span>
+    </div>
+    <div class="pathrow">
+      <span class="name" style="color:#c23e85">Hill Climbing</span>
+      <span class="pill stuck">stopped, stuck</span>
+      <span class="trail">620893001 &rarr; 401837619 &rarr; 268101193 &rarr; 268101194 &rarr; 2574785609 &rarr; 2574785660</span>
+      <span class="meta">6 nodes &middot; 629.6 m</span>
+    </div>
+    <div class="frame">
+      <img src="assets/fig10_solution_paths.png" alt="Explored streets and solution path of each algorithm">
+      <div class="framecap"><b>Fig. 10</b>Explored streets and final path &mdash; the &times; marks where Hill Climbing gave up.</div>
+    </div>
+    <div class="frame">
+      <img src="assets/fig12_search_progress.png" alt="Explored region after 25, 50, 75 and 100 percent of each search">
+      <div class="framecap"><b>Fig. 12</b>The explored region at 25 / 50 / 75 / 100% of each run.</div>
+    </div>
+  </div>
+</section>
+
+<section class="band section" id="generalize">
+  <div class="wrap">
+    <div class="kicker"><span class="no">&sect;7</span><h2>Does it hold up elsewhere?</h2></div>
+    <p class="intro">One instance can be lucky. The same three algorithms ran again on 200 random A&ndash;B
+      pairs in Lucca, then on four more towns of very different shapes.</p>
+    <div class="tablewrap">
+      <table class="deftable">
+        <tr><th>Metric, 200 pairs</th><th>Bi-Dijkstra</th><th>A*</th><th>Hill Climbing</th></tr>
+        <tr><td>Success rate</td><td>100.0%</td><td>100.0%</td><td>10.5%</td></tr>
+        <tr><td>Mean nodes expanded</td><td>283.2</td><td>130.8</td><td>10.1</td></tr>
+        <tr><td>Mean time</td><td>2.324 ms</td><td>1.116 ms</td><td>0.18 ms</td></tr>
+        <tr><td>Optimal when solved</td><td>100.0%</td><td>100.0%</td><td>4.8%</td></tr>
+      </table>
+    </div>
+    <div class="frame">
+      <img src="assets/fig13_random_pairs.png" alt="Averages over random start goal pairs">
+      <div class="framecap"><b>Fig. 13</b>Averaged over 200 random pairs on the same map.</div>
+    </div>
+    <div class="tablewrap" style="margin-top:28px;">
+      <table class="deftable">
+        <tr><th>Town</th><th>Nodes</th><th>Bi-Dijkstra</th><th>A*</th><th>A*/Bi-Dijkstra</th><th>Hill Climbing</th></tr>
+        <tr><td>Centro Storico</td><td>559</td><td>257</td><td>164</td><td>64%</td><td>stuck, 1,327 m short</td></tr>
+        <tr><td>Bruges</td><td>3,119</td><td>1,993</td><td>1,303</td><td>65%</td><td>stuck, 1,722 m short</td></tr>
+        <tr><td>Chefchaouen</td><td>1,071</td><td>858</td><td>557</td><td>65%</td><td>stuck, 1,680 m short</td></tr>
+        <tr><td>Sidi Bou Said</td><td>292</td><td>189</td><td>103</td><td>54%</td><td>stuck, 928 m short</td></tr>
+        <tr><td>Hallstatt</td><td>29</td><td>14</td><td>10</td><td>71%</td><td>stuck, 1,067 m short</td></tr>
+      </table>
+    </div>
+    <div class="frame">
+      <img src="assets/fig14_towns.png" alt="Nodes expanded by Bidirectional Dijkstra and A star in different towns">
+      <div class="framecap"><b>Fig. 14</b>A*'s edge over Bidirectional Dijkstra holds from 29 nodes to 3,119.</div>
+    </div>
+  </div>
+</section>
+
+<section class="band plate" id="verdict">
+  <div class="wrap">
+    <div class="eyebrow">Three towns, five random samples, one instance &mdash; the pattern holds</div>
+    <div class="kicker"><span class="no">&sect;8</span><h2>The verdict</h2></div>
+    <div class="verdict-grid">
+      <div class="verdict-card" style="border-color:var(--c-bi)">
+        <h3 style="color:var(--c-bi)">Bidirectional Dijkstra</h3>
+        <p>Optimal, and needs no heuristic at all &mdash; only a known goal and a graph that can be walked
+          backwards. Its saving comes entirely from meeting in the middle.</p>
+        <p class="rec">Use it when no reliable compass exists.</p>
+      </div>
+      <div class="verdict-card" style="border-color:var(--c-astar)">
+        <h3 style="color:var(--c-astar)">A*</h3>
+        <p>Optimal, and consistently the cheapest optimal option here &mdash; 36&ndash;54% fewer nodes than
+          Bidirectional Dijkstra, in Lucca and in every other town tested.</p>
+        <p class="rec">Use it whenever a good admissible heuristic exists.</p>
+      </div>
+      <div class="verdict-card" style="border-color:var(--c-hill)">
+        <h3 style="color:var(--c-hill)">Hill Climbing</h3>
+        <p>An order of magnitude cheaper than either &mdash; and right only one time in ten, undone by the
+          very dead ends that make an old city worth walking through.</p>
+        <p class="rec">Use it only when speed matters more than arriving.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>Map data &copy; OpenStreetMap contributors. Built on <b>osmnx</b>, <b>networkx</b>, <b>numpy</b>,
+      <b>shapely</b>, <b>Pillow</b> and <b>imageio-ffmpeg</b>.</div>
+    <div>Rendered from <b>dijkstra_osm_visualizer.ipynb</b> &middot; Centro Storico, Lucca, Italy &middot; seed 42</div>
+  </div>
+</footer>
+</body>
+</html>
