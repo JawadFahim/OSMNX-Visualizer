@@ -12,8 +12,8 @@
      figure sits in the same cream mat, like prints catalogued in a survey record. */
   :root{
     --parchment:#ece2c9;      --parchment-deep:#ddcfa9;
-    --ink:#2a2219;             --ink-soft:#5a4f3f;
-    --plate:#0d1430;           --plate-fg:#eee7d6;   --plate-soft:#a7acc9;
+    --ink:#2b2518;             --ink-soft:#5a4f3f;
+    --plate:#1b2244;           --plate-fg:#f3ecd9;   --plate-soft:#c2c6e2;
     --gold:#9c7a34;            --gold-bright:#c89a42;
     --line: rgba(42,34,25,.16);--line-dark: rgba(238,231,214,.16);
     --c-bi:#2ea8ff; --c-bi2:#b66cff; --c-astar:#ffb347; --c-hill:#ff7ab6;
@@ -28,7 +28,7 @@
     padding-left:max(0px, env(safe-area-inset-left,0px));
     padding-right:max(0px, env(safe-area-inset-right,0px));
   }
-  h1,h2,h3{ font-family:"Fraunces", Georgia, serif; text-wrap:balance; margin:0; color:var(--ink); }
+  h1,h2,h3{ font-family:"Fraunces", Georgia, serif; text-wrap:balance; margin:0; color:inherit; }
   p{ margin:0; }
   img{ max-width:100%; display:block; }
   a{ color:var(--gold); text-decoration-thickness:1px; }
@@ -103,8 +103,9 @@
   /* ---------- definition table ---------- */
   .deftable{ width:100%; border-collapse:collapse; font-size:14.5px; }
   .deftable th,.deftable td{ text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .deftable td{ color:var(--ink); font-weight:600; }
   .deftable th{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); font-weight:500; }
-  .deftable td:first-child,.deftable th:first-child{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em; color:var(--gold); text-transform:uppercase; white-space:nowrap; }
+  .deftable td:first-child,.deftable th:first-child{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em; color:var(--gold); text-transform:uppercase; white-space:nowrap; font-weight:600; }
   .tablewrap{ overflow-x:auto; }
   /* ---------- scoreboard (dark) ---------- */
   .score{ width:100%; border-collapse:collapse; font-size:14.5px; min-width:560px; }
@@ -112,7 +113,7 @@
   .score thead th{ font-family:"Fraunces",serif; font-weight:600; font-size:16px; text-align:left; border-bottom:2px solid var(--line-dark); }
   .score thead th.mBI{ color:var(--c-bi); } .score thead th.mAS{ color:var(--c-astar); } .score thead th.mHC{ color:var(--c-hill); }
   .score tbody th{ text-align:left; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--plate-soft); font-weight:500; white-space:nowrap; }
-  .score td{ font-family:"IBM Plex Mono",monospace; color:var(--plate-fg); }
+  .score td{ font-family:"IBM Plex Mono",monospace; color:var(--plate-fg); font-weight:600; }
   .score td.win{ color:var(--c-start); }
   .score td.lose{ color:var(--c-end); }
   /* ---------- path rows ---------- */
@@ -138,8 +139,7 @@
   /* ---------- gallery rows ---------- */
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
   @media (max-width:700px){ .row2{ grid-template-columns:1fr; } }
-  .row3{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-  @media (max-width:700px){ .row3{ grid-template-columns:1fr; } }
+  .row3{ display:flex; flex-direction:column; gap:20px; max-width:640px; margin:0 auto; }
   /* ---------- side-by-side text + figure ---------- */
   .split{ display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; }
   @media (max-width:800px){ .split{ grid-template-columns:1fr; } }
